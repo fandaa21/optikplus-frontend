@@ -1,14 +1,22 @@
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
+import { WishlistContext } from "../context/WishlistContext";
+import { ShoppingCart, Eye, Heart, Star } from "lucide-react";
 
 function ProductCard({ product }) {
   const { addToCart } = useContext(CartContext);
+  const { toggleWishlist, isInWishlist } = useContext(WishlistContext);
   const navigate = useNavigate();
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    e.stopPropagation();
     addToCart(product);
-    navigate("/cart");
+  };
+
+  const handleWishlist = (e) => {
+    e.stopPropagation();
+    toggleWishlist(product);
   };
 
   const formatRupiah = (number) => {
@@ -19,81 +27,86 @@ function ProductCard({ product }) {
     }).format(number);
   };
 
-  const renderStars = () => {
-    let stars = [];
-
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          className={i <= product.rating ? "stars" : "empty-stars"}
-        >
-          ★
-        </span>
-      );
-    }
-
-    return stars;
-  };
-
   return (
-    <div className="product-card">
+    <div 
+      className="group bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer"
+      onClick={() => navigate(`/product/${product.id}`)}
+    >
+      {/* Image Container */}
+      <div className="relative aspect-square bg-gray-50 flex items-center justify-center p-6 overflow-hidden">
+        {product.discount > 0 && (
+          <span className="absolute top-3 left-3 bg-brand text-white text-[10px] font-bold px-2.5 py-1 rounded-md z-10">
+            -{product.discount}%
+          </span>
+        )}
 
-      <div
-        className="product-image-container"
-        onClick={() => navigate(`/product/${product.id}`)}
-      >
-        <div className="discount-badge">
-          -{product.discount}%
-        </div>
-
-        <div className="product-actions">
-          <button className="action-btn">♡</button>
-          <button className="action-btn">👁</button>
+        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+          <button 
+            onClick={handleWishlist}
+            className={`p-2 bg-white rounded-full shadow-md transition-colors ${
+              isInWishlist(product.id) ? "text-red-500" : "text-gray-400 hover:text-brand"
+            }`}
+          >
+            <Heart size={16} className={isInWishlist(product.id) ? "fill-red-500" : ""} />
+          </button>
+          <button 
+            className="p-2 bg-white rounded-full shadow-md hover:bg-brand hover:text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/product/${product.id}`);
+            }}
+          >
+            <Eye size={16} />
+          </button>
         </div>
 
         <img
           src={product.image}
           alt={product.name}
-          className="product-img"
+          className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
         />
 
         <button
-          className="add-to-cart-btn"
+          className="absolute bottom-0 left-0 w-full bg-premium-dark text-white py-3 font-semibold text-sm translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2"
           onClick={handleAdd}
         >
+          <ShoppingCart size={16} />
           Add To Cart
         </button>
       </div>
 
-      <div className="product-info">
-
-        <h4 className="product-name">
+      {/* Info Container */}
+      <div className="p-4">
+        <h4 className="text-sm font-semibold text-gray-800 mb-2 truncate group-hover:text-brand transition-colors">
           {product.name}
         </h4>
 
-        <div className="product-price">
-
-          <span className="current-price">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-brand font-bold text-base">
             {formatRupiah(product.currentPrice)}
           </span>
-
-          <span className="old-price">
-            {formatRupiah(product.oldPrice)}
-          </span>
-
+          {product.oldPrice > product.currentPrice && (
+            <span className="text-gray-400 text-xs line-through">
+              {formatRupiah(product.oldPrice)}
+            </span>
+          )}
         </div>
 
-        <div className="product-rating">
-          <div>{renderStars()}</div>
-
-          <span className="reviews">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                size={14} 
+                className={i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"} 
+              />
+            ))}
+          </div>
+          <span className="text-xs font-medium text-gray-500">
             ({product.reviews})
           </span>
         </div>
-
       </div>
-
     </div>
   );
 }

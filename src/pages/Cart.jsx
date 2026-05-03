@@ -1,23 +1,22 @@
 import { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
-  FaTrash,
-  FaMinus,
-  FaPlus,
-  FaArrowLeft,
-  FaTicketAlt,
-  FaShoppingCart,
-} from "react-icons/fa";
+  Trash2,
+  Minus,
+  Plus,
+  ArrowLeft,
+  Ticket,
+  ShoppingCart,
+  ChevronRight
+} from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Swal from "sweetalert2";
 
 function Cart() {
-  const { cart, removeItem, increaseQty, decreaseQty } = useContext(CartContext);
+  const { cart, removeItem, increaseQty, decreaseQty, discount, setDiscount, coupon, setCoupon } = useContext(CartContext);
   const navigate = useNavigate();
-  const [coupon, setCoupon] = useState("");
-  const [discount, setDiscount] = useState(0);
 
   const subtotal = cart.reduce((sum, item) => sum + item.currentPrice * item.qty, 0);
   const total = subtotal - discount;
@@ -48,352 +47,176 @@ function Cart() {
         icon: "error",
         title: "Gagal",
         text: "Kode kupon tidak valid atau sudah kadaluwarsa.",
-        confirmButtonColor: "#1e293b",
+        confirmButtonColor: "#1a1a1a",
       });
       setDiscount(0);
     }
   };
 
-  const brandColor = "#DB4444";
-
   return (
-    <>
-      <style>{`
-        .cart-page {
-          padding: 60px 20px;
-          background-color: #fcfcfc;
-          min-height: 80vh;
-        }
-        .breadcrumb {
-          font-size: 14px;
-          color: #888;
-          margin-bottom: 20px;
-        }
-        .breadcrumb span { color: #333; font-weight: 600; }
-        
-        .page-title {
-          font-size: 2rem;
-          font-weight: 800;
-          margin-bottom: 40px;
-          color: #1a1a1a;
-          text-transform: uppercase;
-          letter-spacing: -1px;
-        }
-
-        .cart-container {
-          display: grid;
-          grid-template-columns: 1fr 380px;
-          gap: 40px;
-          align-items: start;
-        }
-
-        @media (max-width: 992px) {
-          .cart-container { grid-template-columns: 1fr; }
-        }
-
-        /* Empty State */
-        .cart-empty-state {
-          text-align: center;
-          padding: 80px 20px;
-          background: white;
-          border-radius: 20px;
-          border: 1px dashed #ddd;
-        }
-        .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
-
-        /* Cart Items */
-        .cart-items-list { display: flex; flex-direction: column; gap: 20px; }
-        
-        .cart-item-card {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: white;
-          padding: 20px;
-          border-radius: 16px;
-          border: 1px solid #eee;
-          transition: 0.3s;
-        }
-        .cart-item-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-
-        .item-info { display: flex; align-items: center; gap: 20px; }
-        .item-img-wrapper {
-          width: 100px;
-          height: 100px;
-          background: #f5f5f5;
-          border-radius: 12px;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .item-img-wrapper img { width: 80%; object-fit: contain; }
-        .item-details h3 { font-size: 1.1rem; margin-bottom: 5px; color: #333; }
-        .item-price-unit { color: ${brandColor}; font-weight: 700; }
-
-        .item-actions { display: flex; align-items: center; gap: 40px; }
-        .qty-selector {
-          display: flex;
-          align-items: center;
-          background: #f5f5f5;
-          border-radius: 30px;
-          padding: 5px 15px;
-          gap: 15px;
-        }
-        .qty-selector button {
-          border: none;
-          background: none;
-          cursor: pointer;
-          color: #555;
-          transition: 0.2s;
-        }
-        .qty-selector button:hover:not(:disabled) { color: ${brandColor}; }
-        .qty-selector span { font-weight: 700; min-width: 20px; text-align: center; }
-
-        .item-subtotal { font-weight: 800; color: #1a1a1a; min-width: 120px; text-align: right; }
-        
-        .delete-btn {
-          background: #fff5f5;
-          color: #ff4d4d;
-          border: none;
-          padding: 10px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: 0.3s;
-        }
-        .delete-btn:hover { background: #ff4d4d; color: white; }
-
-        /* Summary Section */
-        .summary-card {
-          background: white;
-          padding: 30px;
-          border-radius: 20px;
-          border: 1px solid #eee;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.03);
-        }
-        .summary-card h3 { margin-bottom: 25px; font-weight: 800; border-bottom: 2px solid #f5f5f5; padding-bottom: 15px; }
-
-        .coupon-section { display: flex; gap: 10px; margin-bottom: 25px; }
-        .input-group {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          background: #f9f9f9;
-          padding: 0 15px;
-          border-radius: 10px;
-          border: 1px solid #eee;
-        }
-        .input-group input {
-          border: none;
-          background: none;
-          padding: 12px 10px;
-          width: 100%;
-          outline: none;
-          font-weight: 600;
-        }
-        .input-icon { color: #888; }
-        
-        .apply-btn {
-          background: #1e293b;
-          color: white;
-          border: none;
-          padding: 0 20px;
-          border-radius: 10px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .summary-details { display: flex; flex-direction: column; gap: 15px; }
-        .summary-line { display: flex; justify-content: space-between; color: #666; font-weight: 500; }
-        .summary-line.total {
-          font-size: 1.4rem;
-          color: #1a1a1a;
-          font-weight: 900;
-          margin-top: 10px;
-          padding-top: 20px;
-          border-top: 2px dashed #eee;
-        }
-        .free { color: #22c55e; font-weight: 700; }
-        .discount span:last-child { color: #22c55e; }
-
-        .checkout-btn {
-          width: 100%;
-          background: ${brandColor};
-          color: white;
-          border: none;
-          padding: 18px;
-          border-radius: 12px;
-          font-weight: 700;
-          font-size: 1rem;
-          margin-top: 30px;
-          cursor: pointer;
-          transition: 0.3s;
-          box-shadow: 0 10px 20px rgba(219, 68, 68, 0.2);
-        }
-        .checkout-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(219, 68, 68, 0.3); }
-        .checkout-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
-
-        .continue-shopping-btn {
-          background: none;
-          border: 2px solid #eee;
-          padding: 12px 25px;
-          border-radius: 12px;
-          cursor: pointer;
-          font-weight: 700;
-          color: #555;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: 0.3s;
-          width: fit-content;
-          margin-top: 20px;
-        }
-        .continue-shopping-btn:hover { border-color: ${brandColor}; color: ${brandColor}; }
-
-        /* Tombol Mulai Belanja Custom */
-        .start-shopping-btn {
-          background: ${brandColor};
-          color: white;
-          border: none;
-          padding: 15px 40px;
-          border-radius: 50px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: 0.3s;
-          box-shadow: 0 8px 20px rgba(219, 68, 68, 0.2);
-          margin-top: 25px;
-        }
-        .start-shopping-btn:hover {
-          transform: scale(1.05);
-          box-shadow: 0 12px 25px rgba(219, 68, 68, 0.3);
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <section className="cart-page container">
-        <nav className="breadcrumb">
-          Home / <span>Cart</span>
+      
+      <main className="flex-grow section-container">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+          <Link to="/" className="hover:text-brand transition-colors">Home</Link>
+          <ChevronRight size={14} />
+          <span className="text-gray-900 font-medium">Shopping Cart</span>
         </nav>
 
-        <h1 className="page-title">Shopping Cart</h1>
+        <h1 className="text-3xl md:text-4xl font-display font-bold mb-10 tracking-tight">Shopping Cart</h1>
 
-        <div className="cart-container">
-          <div className="cart-main">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Cart Items List */}
+          <div className="lg:col-span-8 space-y-6">
             {cart.length === 0 ? (
-              <div className="cart-empty-state">
-                <div className="empty-icon"><FaShoppingCart /></div>
-                <h2 style={{fontWeight: 800}}>Keranjangmu Kosong</h2>
-                <p style={{color: '#777'}}>Sepertinya kamu belum memilih kacamata favoritmu.</p>
+              <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-300">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
+                  <ShoppingCart size={40} />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Keranjangmu Kosong</h2>
+                <p className="text-gray-500 mb-8">Sepertinya kamu belum memilih kacamata favoritmu.</p>
                 <button
-                  className="start-shopping-btn"
+                  className="btn-primary"
                   onClick={() => navigate("/katalog")}
                 >
                   Mulai Belanja Sekarang
                 </button>
               </div>
             ) : (
-              <div className="cart-items-list">
-                {cart.map((item) => (
-                  <div className="cart-item-card" key={item.id}>
-                    <div className="item-info">
-                      <div className="item-img-wrapper">
-                        <img src={item.image} alt={item.name} />
+              <>
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 group transition-all hover:shadow-md"
+                    >
+                      {/* Product Image */}
+                      <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-50 rounded-xl flex items-center justify-center p-4 shrink-0">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
                       </div>
-                      <div className="item-details">
-                        <h3>{item.name}</h3>
-                        <p className="item-price-unit">
-                          {formatRupiah(item.currentPrice)}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="item-actions">
-                      <div className="qty-selector">
+                      {/* Product Info */}
+                      <div className="flex-1 text-center md:text-left">
+                        <h3 className="font-bold text-gray-900 mb-1 group-hover:text-brand transition-colors">{item.name}</h3>
+                        <p className="text-brand font-bold">{formatRupiah(item.currentPrice)}</p>
+                      </div>
+
+                      {/* Quantity Selector */}
+                      <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-full">
                         <button
                           onClick={() => decreaseQty(item.id)}
                           disabled={item.qty <= 1}
+                          className="text-gray-500 hover:text-brand disabled:opacity-30 transition-colors"
                         >
-                          <FaMinus />
+                          <Minus size={18} />
                         </button>
-                        <span>{item.qty}</span>
-                        <button onClick={() => increaseQty(item.id)}>
-                          <FaPlus />
+                        <span className="font-bold w-6 text-center">{item.qty}</span>
+                        <button 
+                          onClick={() => increaseQty(item.id)}
+                          className="text-gray-500 hover:text-brand transition-colors"
+                        >
+                          <Plus size={18} />
                         </button>
                       </div>
-                      <p className="item-subtotal">
-                        {formatRupiah(item.currentPrice * item.qty)}
-                      </p>
-                      <button
-                        className="delete-btn"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        <FaTrash />
-                      </button>
+
+                      {/* Subtotal & Delete */}
+                      <div className="flex items-center gap-6">
+                        <p className="font-display font-bold text-lg min-w-[120px] text-right">
+                          {formatRupiah(item.currentPrice * item.qty)}
+                        </p>
+                        <button
+                          className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                          onClick={() => removeItem(item.id)}
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
 
                 <button
-                  className="continue-shopping-btn"
+                  className="flex items-center gap-2 text-gray-600 font-semibold hover:text-brand transition-colors mt-8"
                   onClick={() => navigate("/katalog")}
                 >
-                  <FaArrowLeft />
-                  <span>Continue Shopping</span>
+                  <ArrowLeft size={20} />
+                  Back to Shopping
                 </button>
-              </div>
+              </>
             )}
           </div>
 
-          <aside className="cart-summary">
-            <div className="summary-card">
-              <h3>Order Summary</h3>
+          {/* Order Summary */}
+          <aside className="lg:col-span-4">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 sticky top-32">
+              <h3 className="text-xl font-bold mb-8 pb-4 border-bottom border-gray-100">Order Summary</h3>
 
-              <div className="coupon-section">
-                <div className="input-group">
-                  <FaTicketAlt className="input-icon" />
-                  <input
-                    placeholder="Coupon Code"
-                    value={coupon}
-                    onChange={(e) => setCoupon(e.target.value)}
-                  />
+              {/* Coupon Section */}
+              <div className="space-y-4 mb-8">
+                <div className="flex gap-2">
+                  <div className="flex-1 flex items-center bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 focus-within:border-brand transition-colors">
+                    <Ticket size={20} className="text-gray-400 mr-2" />
+                    <input
+                      placeholder="Coupon Code"
+                      className="bg-transparent border-none focus:ring-0 text-sm font-semibold w-full"
+                      value={coupon}
+                      onChange={(e) => setCoupon(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    onClick={applyCoupon}
+                    className="bg-premium-dark text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-black transition-colors"
+                  >
+                    Apply
+                  </button>
                 </div>
-                <button className="apply-btn" onClick={applyCoupon}>
-                  Apply
-                </button>
               </div>
 
-              <div className="summary-details">
-                <div className="summary-line">
+              {/* Price Details */}
+              <div className="space-y-4 text-sm font-medium">
+                <div className="flex justify-between text-gray-500">
                   <span>Subtotal</span>
-                  <span>{formatRupiah(subtotal)}</span>
+                  <span className="text-gray-900">{formatRupiah(subtotal)}</span>
                 </div>
-                <div className="summary-line discount">
+                <div className="flex justify-between text-gray-500">
                   <span>Discount</span>
-                  <span>- {formatRupiah(discount)}</span>
+                  <span className="text-green-600">- {formatRupiah(discount)}</span>
                 </div>
-                <div className="summary-line shipping">
+                <div className="flex justify-between text-gray-500">
                   <span>Shipping</span>
-                  <span className="free">Free</span>
+                  <span className="text-green-600 font-bold">Free</span>
                 </div>
-                <div className="summary-line total">
-                  <span>Total</span>
-                  <span>{formatRupiah(total)}</span>
+                
+                <div className="pt-6 mt-6 border-t border-dashed border-gray-200">
+                  <div className="flex justify-between items-end">
+                    <span className="text-gray-900 font-bold text-lg">Total</span>
+                    <span className="text-2xl font-display font-extrabold text-brand">
+                      {formatRupiah(total)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <button
-                className="checkout-btn"
+                className="w-full btn-primary py-4 rounded-xl mt-10 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-brand/20"
                 disabled={cart.length === 0}
                 onClick={() => navigate("/checkout")}
               >
                 Proceed to Checkout
               </button>
+              
+              <p className="text-center text-[10px] text-gray-400 mt-6 uppercase tracking-widest font-bold">
+                Secure SSL Encrypted Checkout
+              </p>
             </div>
           </aside>
         </div>
-      </section>
+      </main>
+
       <Footer />
-    </>
+    </div>
   );
 }
 

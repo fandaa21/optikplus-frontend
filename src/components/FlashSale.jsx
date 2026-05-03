@@ -1,231 +1,98 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import ProductCard from "./ProductCard";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { FlashSaleContext } from "../context/FlashSaleContext";
 
 function FlashSale() {
-  const navigate = useNavigate();
   const sliderRef = useRef(null);
-
   const [products, setProducts] = useState([]);
-
-  const [time, setTime] = useState({
-    days: 3,
-    hours: 23,
-    minutes: 19,
-    seconds: 56,
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime((prev) => {
-        let { days, hours, minutes, seconds } =
-          prev;
-
-        if (seconds > 0) {
-          seconds--;
-        } else {
-          seconds = 59;
-
-          if (minutes > 0) {
-            minutes--;
-          } else {
-            minutes = 59;
-
-            if (hours > 0) {
-              hours--;
-            } else {
-              hours = 23;
-
-              if (days > 0) days--;
-            }
-          }
-        }
-
-        return {
-          days,
-          hours,
-          minutes,
-          seconds,
-        };
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  const { timeLeft, getFlashSalePrice, isFlashSaleActive } = useContext(FlashSaleContext);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/products")
       .then((res) => res.json())
       .then((data) => {
-        const flashProducts = data
-          .slice(0, 8)
-          .map((item, index) => {
-            const price =
-              Number(item.price) || 0;
-
-            const discount =
-              [10, 15, 20, 25, 30][
-                index % 5
-              ];
-
-            const oldPrice =
-              Math.round(
-                price /
-                  (1 - discount / 100)
-              );
-
+        // Only show products that have a flash sale price
+        const saleItems = data.map(item => {
+          const salePrice = getFlashSalePrice(item);
+          if (salePrice) {
             return {
-              id: item.id,
-              name:
-                item.name ||
-                item.brand +
-                  " " +
-                  item.model,
-              currentPrice: price,
-              oldPrice: oldPrice,
-              discount: discount,
+              ...item,
+              ...salePrice,
               rating: 5,
-              reviews: 20 + index * 5,
-              image:
-                "/images/kacamata1.png",
+              reviews: 20 + Math.floor(Math.random() * 50),
+              image: item.image || "/images/kacamata1.png",
             };
-          });
-
-        setProducts(flashProducts);
+          }
+          return null;
+        }).filter(item => item !== null);
+        
+        setProducts(saleItems);
       })
-      .catch((err) =>
-        console.log(err)
-      );
-  }, []);
+      .catch((err) => console.log(err));
+  }, [getFlashSalePrice]);
 
-  const formatNumber = (num) =>
-    String(num).padStart(2, "0");
+  const formatNumber = (num) => String(num).padStart(2, "0");
 
-  const slideLeft = () => {
-    // Geser ke kiri: Lebar card (270) + Gap (30) = 300
-    sliderRef.current.scrollBy({
-      left: -300,
-      behavior: "smooth",
-    });
+  const scroll = (direction) => {
+    if (sliderRef.current) {
+      const { scrollLeft, clientWidth } = sliderRef.current;
+      const scrollTo = direction === "left" ? scrollLeft - clientWidth / 2 : scrollLeft + clientWidth / 2;
+      sliderRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
+    }
   };
 
-  const slideRight = () => {
-    // Geser ke kanan: Lebar card (270) + Gap (30) = 300
-    sliderRef.current.scrollBy({
-      left: 300,
-      behavior: "smooth",
-    });
-  };
+  if (products.length === 0 || !isFlashSaleActive()) return null;
 
   return (
-    <section className="flashsale">
-      <div className="flashsale-header">
-
-        <div className="header-left">
-          <div className="today-wrapper">
-            <div className="red-rect"></div>
-
-            <span className="today-text">
-              Today's
-            </span>
+    <section className="section-container">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-10 bg-brand rounded-md"></div>
+            <span className="text-brand font-bold text-sm uppercase tracking-widest">Today's</span>
           </div>
-
-          <h2 className="section-title">
-            Flash Sales
-          </h2>
-        </div>
-
-        <div className="timer-container">
-
-          <div className="timer-unit">
-            <span className="label">
-              Days
-            </span>
-
-            <span className="value">
-              {formatNumber(
-                time.days
-              )}
-            </span>
-          </div>
-
-          <span className="separator">
-            :
-          </span>
-
-          <div className="timer-unit">
-            <span className="label">
-              Hours
-            </span>
-
-            <span className="value">
-              {formatNumber(
-                time.hours
-              )}
-            </span>
-          </div>
-
-          <span className="separator">
-            :
-          </span>
-
-          <div className="timer-unit">
-            <span className="label">
-              Minutes
-            </span>
-
-            <span className="value">
-              {formatNumber(
-                time.minutes
-              )}
-            </span>
-          </div>
-
-          <span className="separator">
-            :
-          </span>
-
-          <div className="timer-unit">
-            <span className="label">
-              Seconds
-            </span>
-
-            <span className="value">
-              {formatNumber(
-                time.seconds
-              )}
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold">Flash Sales</h2>
+            
+            <div className="flex items-center gap-4">
+              <Clock className="text-brand hidden sm:block" size={24} />
+              <div className="flex items-center gap-3">
+                {[
+                  { label: "Days", value: timeLeft.days },
+                  { label: "Hours", value: timeLeft.hours },
+                  { label: "Mins", value: timeLeft.minutes },
+                  { label: "Secs", value: timeLeft.seconds }
+                ].map((unit, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">{unit.label}</span>
+                      <span className="text-2xl md:text-3xl font-display font-extrabold tabular-nums leading-none">
+                        {formatNumber(unit.value)}
+                      </span>
+                    </div>
+                    {idx < 3 && <span className="text-brand text-2xl font-bold mt-4">:</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flash-nav">
-          <button
-            onClick={slideLeft}
-          >
-            ‹
+        <div className="flex gap-2">
+          <button onClick={() => scroll("left")} className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 hover:bg-brand hover:text-white transition-all">
+            <ChevronLeft size={24} />
           </button>
-
-          <button
-            onClick={slideRight}
-          >
-            ›
+          <button onClick={() => scroll("right")} className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 hover:bg-brand hover:text-white transition-all">
+            <ChevronRight size={24} />
           </button>
         </div>
-
       </div>
 
-      <div
-        className="flashsale-products horizontal-scroll"
-        ref={sliderRef}
-      >
+      <div ref={sliderRef} className="flex gap-6 overflow-x-auto no-scrollbar pb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
         {products.map((product) => (
-          <div
-            className="flash-item"
-            key={product.id}
-          >
-            <ProductCard
-              product={product}
-            />
+          <div key={product.id} className="min-w-[280px] md:min-w-[300px]">
+            <ProductCard product={product} />
           </div>
         ))}
       </div>

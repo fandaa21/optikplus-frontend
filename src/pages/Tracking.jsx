@@ -1,94 +1,104 @@
 import { useEffect, useState } from "react";
-import { Package, Download, MapPin, Calendar, CreditCard } from "lucide-react"; // Ikon modern
+import { Package, Download, MapPin, Calendar, CreditCard, ChevronRight, CheckCircle2, ArrowLeft, Printer } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import jsPDF from "jspdf";
+import { Link, useNavigate } from "react-router-dom";
 
 function Tracking() {
   const [order, setOrder] = useState(null);
+  const navigate = useNavigate();
 
   const downloadInvoice = () => {
     const doc = new jsPDF();
     const primaryColor = "#DB4444";
-    const secondaryColor = "#475569";
+    const darkColor = "#1a1a1a";
+    const grayColor = "#64748b";
 
-    // --- HEADER ---
-    doc.setFillColor(15, 23, 42); // Warna Slate-900 (Gelap)
-    doc.rect(0, 0, 210, 40, "F"); // Background header hitam
+    // --- Header ---
+    doc.setFillColor(darkColor);
+    doc.rect(0, 0, 210, 50, "F");
+
+    // Branding / Logo
+    try {
+      doc.addImage("/images/logo.png", "PNG", 20, 10, 30, 30);
+    } catch (e) {
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text("OPTIK PLUS", 20, 30);
+    }
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("OPTIK PLUS LANGKAWI", 20, 25);
-
-    // --- INFO INVOICE ---
-    doc.setTextColor(secondaryColor);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("Diterbitkan untuk:", 20, 55);
+    doc.text("Premium Eyewear & Lens Specialist", 60, 25);
+    doc.text("Jl. Delima, Pekanbaru, Riau", 60, 32);
+    doc.text("WA: +62 812-8355-3361", 60, 39);
 
-    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(28);
+    doc.setFont("helvetica", "bold");
+    doc.text("INVOICE", 140, 35);
+
+    // --- Details ---
+    doc.setTextColor(darkColor);
     doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Pelanggan Setia Optik Plus", 20, 62); // Bisa diganti order.customer_name jika ada
-
-    doc.setTextColor(secondaryColor);
-    doc.setFontSize(10);
-    doc.text(`ID Pesanan: #ORD-${order.id}`, 140, 55);
-    doc.text(
-      `Tanggal: ${new Date(order.created_at).toLocaleDateString("id-ID")}`,
-      140,
-      62,
-    );
-
-    // --- TABEL HEADER ---
-    doc.setDrawColor(226, 232, 240); // Warna border abu-abu
-    doc.line(20, 75, 190, 75); // Garis atas tabel
-
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text("Deskripsi Produk", 25, 83);
-    doc.text("Total", 160, 83);
-
-    doc.line(20, 88, 190, 88); // Garis bawah header tabel
-
-    // --- ISI TABEL ---
+    doc.text("Bill To:", 20, 70);
     doc.setFont("helvetica", "normal");
-    doc.text(`${order.product_name}`, 25, 100);
-    doc.text(`Rp ${Number(order.total).toLocaleString("id-ID")}`, 160, 100);
-
-    // --- SUMMARY / TOTAL ---
-    doc.setFillColor(248, 250, 252);
-    doc.rect(130, 115, 60, 30, "F"); // Box total
+    doc.text("Pelanggan Setia Optik Plus", 20, 78);
+    doc.text("Pekanbaru, Indonesia", 20, 84);
 
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL BAYAR", 135, 125);
-    doc.setTextColor(primaryColor);
-    doc.setFontSize(14);
-    doc.text(`Rp ${Number(order.total).toLocaleString("id-ID")}`, 135, 135);
-
-    // --- FOOTER ---
-    doc.setTextColor(secondaryColor);
+    doc.text("Order Info:", 140, 70);
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
-    doc.text("Status Pesanan:", 20, 160);
+    doc.text(`ID Pesanan: #ORD-${order.id}`, 140, 78);
+    doc.text(`Tanggal: ${new Date(order.created_at).toLocaleDateString("id-ID")}`, 140, 84);
+    doc.text(`Status: ${order.status.toUpperCase()}`, 140, 90);
+
+    // --- Table ---
+    doc.setFillColor(248, 250, 252);
+    doc.rect(20, 105, 170, 10, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(darkColor);
+    doc.text("Deskripsi Produk", 25, 112);
+    doc.text("Total Harga", 155, 112);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`${order.product_name}`, 25, 125);
+    doc.text(`Rp ${Number(order.total).toLocaleString("id-ID")}`, 155, 125);
+    doc.line(20, 132, 190, 132);
+
+    // --- Summary ---
+    const summaryY = 150;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Subtotal:", 130, summaryY);
+    doc.text(`Rp ${Number(order.total).toLocaleString("id-ID")}`, 165, summaryY);
+
+    doc.text("Pengiriman:", 130, summaryY + 8);
+    doc.setTextColor(22, 163, 74);
+    doc.text("GRATIS", 165, summaryY + 8);
+
+    doc.setFillColor(primaryColor);
+    doc.rect(125, summaryY + 15, 70, 12, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text("TOTAL BAYAR:", 130, summaryY + 23);
+    doc.text(`Rp ${Number(order.total).toLocaleString("id-ID")}`, 160, summaryY + 23);
+
+    // --- Footer ---
+    doc.setFontSize(8);
+    doc.setTextColor(grayColor);
+    doc.text("Catatan:", 20, 250);
+    doc.text("1. Produk yang sudah dibeli tidak dapat ditukar/dikembalikan.", 20, 256);
+    doc.text("2. Simpan invoice ini sebagai bukti garansi resmi Optik Plus.", 20, 262);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
     doc.setTextColor(primaryColor);
-    doc.text(`${order.status.toUpperCase()}`, 50, 160);
+    doc.text("TERIMA KASIH TELAH BERBELANJA", 105, 280, { align: "center" });
 
-    doc.setTextColor(secondaryColor);
-    doc.setFontSize(9);
-    doc.text(
-      "Terima kasih telah mempercayakan kesehatan mata Anda kepada kami.",
-      105,
-      200,
-      { align: "center" },
-    );
-    doc.text("Invoice ini sah dihasilkan secara komputerisasi.", 105, 205, {
-      align: "center",
-    });
-
-    // Simpan PDF
-    doc.save(`Invoice-ORD-${order.id}.pdf`);
+    doc.save(`Invoice-OPTIKPLUS-${order.id}.pdf`);
   };
 
   useEffect(() => {
@@ -105,101 +115,119 @@ function Tracking() {
 
   if (!order) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Package size={48} className="mx-auto text-slate-300 mb-4" />
-          <h2 className="text-xl font-semibold">Memuat detail pesanan...</h2>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
+        <Navbar />
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300 animate-pulse">
+            <Package size={32} />
+          </div>
+          <h2 className="text-xl font-bold">Memuat detail pesanan...</h2>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="tracking-page-container">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <main className="max-w-4xl">
-        <header>
-          <h1>Status Pesanan</h1>
-          <p>Terima kasih, pesanan Anda telah kami terima.</p>
+      
+      <main className="flex-grow section-container max-w-4xl">
+        <header className="text-center space-y-4 mb-12">
+          <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 size={48} />
+          </div>
+          <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight">Pesanan Berhasil!</h1>
+          <p className="text-gray-500 text-lg">Terima kasih, pesanan Anda telah kami terima dan sedang diproses.</p>
         </header>
 
-        <div className="tracking-main-card">
-          {/* Header Hitam */}
-          <div className="card-header-black">
-            <div>
-              <span className="order-id-label">ID Pesanan</span>
-              <h2 style={{ margin: 0 }}>#ORD-{order.id}</h2>
+        <div className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-gray-200/50 border border-gray-100">
+          {/* Top Banner */}
+          <div className="bg-premium-dark p-8 md:p-10 text-white flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="space-y-1 text-center md:text-left">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">ID Pesanan</span>
+              <h2 className="text-2xl md:text-3xl font-display font-black tracking-tighter">#ORD-{order.id}</h2>
             </div>
-            <div className="status-badge-modern">
-              <span
-                className="animate-pulse"
-                style={{
-                  width: 8,
-                  height: 8,
-                  background: "#4ade80",
-                  borderRadius: "50%",
-                }}
-              ></span>
-              {order.status}
+            <div className="flex items-center gap-3 bg-white/10 px-6 py-3 rounded-2xl border border-white/20 backdrop-blur-sm">
+              <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></span>
+              <span className="text-sm font-bold tracking-widest uppercase">{order.status}</span>
             </div>
           </div>
 
-          {/* Isi Info */}
-          <div className="card-body-content">
-            <div className="info-group">
-              <div className="icon-box">
-                <Package size={20} />
+          {/* Info Grid */}
+          <div className="p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="flex items-start gap-5 group">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-all">
+                <Package size={24} />
               </div>
-              <div className="info-text">
-                <h4>Produk yang dibeli</h4>
-                <p>{order.product_name}</p>
-              </div>
-            </div>
-
-            <div className="info-group">
-              <div className="icon-box">
-                <Calendar size={20} />
-              </div>
-              <div className="info-text">
-                <h4>Tanggal Pesanan</h4>
-                <p>{new Date(order.created_at).toLocaleDateString("id-ID")}</p>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Produk yang dibeli</h4>
+                <p className="text-gray-900 font-bold leading-relaxed">{order.product_name}</p>
               </div>
             </div>
 
-            <div className="info-group">
-              <div className="icon-box">
-                <CreditCard size={20} />
+            <div className="flex items-start gap-5 group">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-all">
+                <Calendar size={24} />
               </div>
-              <div className="info-text">
-                <h4>Total Pembayaran</h4>
-                <p className="price-text">
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tanggal Pesanan</h4>
+                <p className="text-gray-900 font-bold">{new Date(order.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-5 group">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-all">
+                <CreditCard size={24} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Pembayaran</h4>
+                <p className="text-2xl font-display font-black text-brand tracking-tighter">
                   Rp {Number(order.total).toLocaleString("id-ID")}
                 </p>
               </div>
             </div>
 
-            <div className="info-group">
-              <div className="icon-box">
-                <MapPin size={20} />
+            <div className="flex items-start gap-5 group">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-all">
+                <MapPin size={24} />
               </div>
-              <div className="info-text">
-                <h4>Lokasi Toko</h4>
-                <p>Optik Plus Langkawi, Kedah.</p>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Lokasi Toko</h4>
+                <p className="text-gray-900 font-bold leading-relaxed">Optik Plus Langkawi, Jl. Delima, Pekanbaru.</p>
               </div>
             </div>
           </div>
 
-          {/* Tombol Bawah */}
-          <div className="action-footer">
-            <button className="btn-download" onClick={downloadInvoice}>
-              <Download size={18} /> Unduh Faktur (PDF)
+          {/* Action Footer */}
+          <div className="bg-gray-50 p-8 md:p-10 flex flex-col sm:flex-row justify-center items-center gap-4">
+            <button 
+              className="w-full sm:w-auto btn-primary flex items-center gap-2 group"
+              onClick={downloadInvoice}
+            >
+              <Download size={20} className="group-hover:translate-y-0.5 transition-transform" /> 
+              Unduh Faktur (PDF)
             </button>
-            <button className="btn-print" onClick={() => window.print()}>
-              Pelacakan Cetak
+            <button 
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-100 transition-all"
+              onClick={() => window.print()}
+            >
+              <Printer size={20} /> Cetak Halaman
             </button>
           </div>
         </div>
+
+        <div className="mt-12 text-center">
+           <button 
+             onClick={() => navigate("/")}
+             className="text-gray-500 font-bold hover:text-brand transition-colors flex items-center gap-2 mx-auto"
+           >
+             <ArrowLeft size={20} /> Kembali ke Beranda
+           </button>
+        </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

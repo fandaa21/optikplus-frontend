@@ -54,6 +54,15 @@ function CartProvider({ children }) {
     );
   };
 
+  const [discount, setDiscount] = useState(0);
+  const [coupon, setCoupon] = useState("");
+
+  const clearCart = () => {
+    setCart([]);
+    setDiscount(0);
+    setCoupon("");
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -61,7 +70,12 @@ function CartProvider({ children }) {
         addToCart,
         removeItem,
         increaseQty,
-        decreaseQty
+        decreaseQty,
+        clearCart,
+        discount,
+        setDiscount,
+        coupon,
+        setCoupon
       }}
     >
       {children}

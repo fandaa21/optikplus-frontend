@@ -11,6 +11,7 @@ import Promo from "./pages/Promo";
 import ProductDetail from "./pages/ProductDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
+import Wishlist from "./pages/Wishlist";
 import "./App.css";
 
 function App() {
@@ -26,10 +27,10 @@ function App() {
         <Route path="/testimoni" element={<Testimoni />} />
         <Route path="/estimasi" element={<Estimasi />} />
         <Route path="/promo" element={<Promo />} />
+        <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );

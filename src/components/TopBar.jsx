@@ -1,24 +1,29 @@
+import { Globe, ChevronDown } from "lucide-react";
 
 function TopBar() {
   return (
-    <div className="topbar">
-      <div className="topbar-container">
-        {/* Konten Tengah */}
-        <div className="topbar-message">
-          <span>Optik Plus Langkawi - </span>
-          <a href="/shop" className="shop-now">ShopNow</a>
+    <div className="bg-black text-white py-2.5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs sm:text-sm font-medium">
+        <div className="hidden sm:block opacity-0 pointer-events-none">
+          {/* Spacer for centering */}
+          Language
+        </div>
+        
+        <div className="flex-1 text-center">
+          <p>
+            Optik Plus Langkawi — Premium Eyewear & Lens Specialist. 
+            <a href="/promo" className="ml-2 underline underline-offset-4 hover:text-brand transition-colors">Shop Now</a>
+          </p>
         </div>
 
-        {/* Konten Kanan */}
-        <div className="topbar-language">
-          <select className="lang-select">
-            <option value="en">English</option>
-            <option value="id">Indonesia</option>
-          </select>
+        <div className="flex items-center gap-2 cursor-pointer hover:text-brand transition-colors">
+          <Globe size={14} />
+          <span>English</span>
+          <ChevronDown size={14} />
         </div>
       </div>
     </div>
   );
 }
 
-export default TopBar
+export default TopBar;
